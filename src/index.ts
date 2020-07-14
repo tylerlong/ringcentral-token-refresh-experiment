@@ -13,5 +13,26 @@ const rc = new RingCentral({
     password: process.env.RINGCENTRAL_PASSWORD!,
   });
   console.log(rc.token?.access_token);
+  let extInfo = await rc.restapi().account().extension().get();
+  console.log(extInfo.id);
+  const oldTokenFromDB = JSON.parse(JSON.stringify(rc.token));
+  await rc.refresh();
+  console.log(rc.token?.access_token);
+  extInfo = await rc.restapi().account().extension().get();
+  console.log(extInfo.id);
+  rc.token = oldTokenFromDB;
+
+  // access token become invalid
+  try {
+    extInfo = await rc.restapi().account().extension().get();
+    console.log(extInfo.id);
+  } catch (e) {
+    console.log(e.message);
+  }
+
+  // but refresh token is still valid
+  await rc.refresh();
+  extInfo = await rc.restapi().account().extension().get();
+  console.log(extInfo.id);
   await rc.revoke();
 })();
