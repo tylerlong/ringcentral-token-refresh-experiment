@@ -1,4 +1,5 @@
 import RingCentral from 'ringcentral-extensible';
+import waitFor from 'wait-for-async';
 
 const rc = new RingCentral({
   clientId: process.env.RINGCENTRAL_CLIENT_ID!,
@@ -20,9 +21,10 @@ const rc = new RingCentral({
   console.log(rc.token?.access_token);
   extInfo = await rc.restapi().account().extension().get();
   console.log(extInfo.id);
+
   rc.token = oldTokenFromDB;
 
-  // access token become invalid
+  // old access token become invalid immediately
   try {
     extInfo = await rc.restapi().account().extension().get();
     console.log(extInfo.id);
@@ -30,7 +32,9 @@ const rc = new RingCentral({
     console.log(e.message);
   }
 
-  // but refresh token is still valid
+  await waitFor({interval: 60000});
+
+  // old refresh token becomes invalid after around 1 minute
   await rc.refresh();
   extInfo = await rc.restapi().account().extension().get();
   console.log(extInfo.id);
